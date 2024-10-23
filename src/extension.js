@@ -82,7 +82,10 @@ function activate(context) {
 
         console.log(document);
 
-        if (cache.isExpired()) {
+        if (
+          cache.isExpired() ||
+          config.get("pdfPath") !== cache.get("cachedPath")
+        ) {
           let { words: w, wordCount } = await readPDFFile(
             config.get("pdfPath")
           );
@@ -116,7 +119,11 @@ function activate(context) {
 
           console.log(w);
 
-          await cache.update({ words: w, wordCount: wordCount });
+          await cache.update({
+            words: w,
+            wordCount: wordCount,
+            cachedPath: config.get("pdfPath"),
+          });
         }
 
         const completionItems = [];
