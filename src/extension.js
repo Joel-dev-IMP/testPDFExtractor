@@ -5,6 +5,7 @@ const fs = require("fs/promises");
 const pdf = require("pdf-parse");
 
 const p = require("path");
+const { PDFCache } = require("./cache");
 
 const normalizeWord = (word) => {
   return word.toLowerCase().replaceAll(/\W/g, "");
@@ -54,9 +55,6 @@ const readPDFFile = async (path) => {
       }
     });
 
-    console.log(words);
-    console.log(wordCount);
-
     return { words: [...new Set(words)], wordCount: wordCount };
   } catch (err) {
     console.log(err);
@@ -80,37 +78,49 @@ function activate(context) {
     {
       provideCompletionItems: async (document, position) => {
         const config = vscode.workspace.getConfiguration("testPDFExtractor");
+        const cache = new PDFCache(context);
 
         console.log(document);
-        let { words, wordCount } = await readPDFFile(config.get("pdfPath"));
-        /*
-        const blocklist = [
-          "Jegelka",
-          "Esparza",
-          "Luttenberger",
-          "Fassung",
-          "Department",
-          "Computer",
-          "Science",
-          "Oktober",
-          "Erstautor",
-          "commercial",
-          "only",
-          "Discrete",
-          "Structures",
-          "INHN",
-          "Department",
-          "Computer",
-          "Science",
-        ];
 
-        return !blocklist.includes(v);*/
+        if (cache.isExpired()) {
+          let { words: w, wordCount } = await readPDFFile(
+            config.get("pdfPath")
+          );
+          /*
+          const blocklist = [
+            "Jegelka",
+            "Esparza",
+            "Luttenberger",
+            "Fassung",
+            "Department",
+            "Computer",
+            "Science",
+            "Oktober",
+            "Erstautor",
+            "commercial",
+            "only",
+            "Discrete",
+            "Structures",
+            "INHN",
+            "Department",
+            "Computer",
+            "Science",
+          ];
 
-        words = words.filter((v) => {
-          return v.length > 1 && v.length > wordCount[normalizeWord(v)];
-        });
+          return !blocklist.includes(v);*/
+
+          // console.log(pdfData);
+          w = w.filter((v) => {
+            return v.length > 1 && v.length > wordCount[normalizeWord(v)];
+          });
+
+          console.log(w);
+
+          await cache.update({ words: w, wordCount: wordCount });
+        }
 
         const completionItems = [];
+        const words = cache.get("words");
 
         for (let i = 0; i < words.length; i++) {
           const element = words[i];
