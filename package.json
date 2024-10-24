@@ -51,7 +51,13 @@
           "description": "Path to the PDF, where the completion items should be extracted from."
         }
       }
-    }
+    },
+    "languages": [
+      {
+        "id": "markdown",
+        "configuration": "./language-configuration.json"
+      }
+    ]
   },
   "scripts": {
     "lint": "eslint .",
