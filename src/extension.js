@@ -5,7 +5,7 @@ const fs = require("fs/promises");
 const pdf = require("pdf-parse");
 
 const p = require("path");
-const { PDFCache } = require("./cache");
+const { WorkspaceCache } = require("./cache");
 
 const normalizeWord = (word) => {
   return word.toLowerCase().replaceAll(/\W/g, "");
@@ -78,9 +78,15 @@ function activate(context) {
     {
       provideCompletionItems: async (document, position) => {
         const config = vscode.workspace.getConfiguration("testPDFExtractor");
-        const cache = new PDFCache(context);
+        const cache = new WorkspaceCache(context, "testPDFExtractor_cache");
+
+        /*
+          let t = new vscode.CompletionItem("Less or equal"); // Needed for later
+          t.insertText = new vscode.SnippetString("$$1 \\leq $2$$0");
+        */
 
         console.log(document);
+        console.log(vscode.window.activeTextEditor.selection);
 
         if (
           cache.isExpired() ||
@@ -89,30 +95,7 @@ function activate(context) {
           let { words: w, wordCount } = await readPDFFile(
             config.get("pdfPath")
           );
-          /*
-          const blocklist = [
-            "Jegelka",
-            "Esparza",
-            "Luttenberger",
-            "Fassung",
-            "Department",
-            "Computer",
-            "Science",
-            "Oktober",
-            "Erstautor",
-            "commercial",
-            "only",
-            "Discrete",
-            "Structures",
-            "INHN",
-            "Department",
-            "Computer",
-            "Science",
-          ];
 
-          return !blocklist.includes(v);*/
-
-          // console.log(pdfData);
           w = w.filter((v) => {
             return v.length > 1 && v.length > wordCount[normalizeWord(v)];
           });

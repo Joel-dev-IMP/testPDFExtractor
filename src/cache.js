@@ -1,11 +1,13 @@
-class PDFCache {
+class WorkspaceCache {
   context;
-  constructor(context) {
+  cacheKey;
+  constructor(context, cacheKey) {
     this.context = context;
+    this.cacheKey = cacheKey;
   }
 
   get(key = "") {
-    const data = this.context.workspaceState.get("testPDFExtractor_cache");
+    const data = this.context.workspaceState.get(this.cacheKey);
 
     if (key === "") return data;
     return data?.[key];
@@ -14,7 +16,7 @@ class PDFCache {
   async update(object) {
     console.log("Updating cache!");
 
-    await this.context.workspaceState.update(`testPDFExtractor_cache`, {
+    await this.context.workspaceState.update(this.cacheKey, {
       ...object,
       date: Date.now(),
     });
@@ -23,7 +25,7 @@ class PDFCache {
   }
 
   async clear() {
-    await this.context.workspaceState.update(`testPDFExtractor_cache`, {});
+    await this.context.workspaceState.update(this.cacheKey, {});
   }
 
   isExpired() {
@@ -35,4 +37,4 @@ class PDFCache {
   }
 }
 
-module.exports = { PDFCache };
+module.exports = { WorkspaceCache };
