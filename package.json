@@ -33,6 +33,12 @@
   ],
   "main": "./src/extension.js",
   "contributes": {
+    "commands": [
+      {
+        "title": "Create Excalidraw file",
+        "command": "testPDFExtractor.createExcalidraw"
+      }
+    ],
     "configuration": {
       "title": "Test PDF Extractor",
       "properties": {

@@ -71,6 +71,35 @@ function activate(context) {
     'Congratulations, your extension "testPDFExtractor" is now active!'
   );
 
+  const createExcalidraw = vscode.commands.registerTextEditorCommand(
+    "testPDFExtractor.createExcalidraw",
+    async (textEditor) => {
+      const workspaceFolder = vscode.workspace.getWorkspaceFolder(
+        textEditor.document.uri
+      );
+
+      if (!workspaceFolder) {
+        vscode.window.showErrorMessage("Current file is not saved to a folder");
+        return;
+      }
+
+      const fileName = await vscode.window.showInputBox({
+        prompt: "Please specify a filename for your Excalidraw file",
+      });
+
+      const imgFolder = workspaceFolder.uri.with({
+        path: workspaceFolder.uri.path + `/img/${fileName}.excalidraw.png`,
+      }).fsPath;
+
+      await fs.writeFile(imgFolder, "");
+      await textEditor.insertSnippet(
+        new vscode.SnippetString(
+          `![\${1:alt}](./img/${fileName}.excalidraw.png)$0`
+        )
+      );
+    }
+  );
+
   let autoComplete = vscode.languages.registerCompletionItemProvider(
     vscode.workspace
       .getConfiguration("testPDFExtractor")
@@ -121,6 +150,15 @@ function activate(context) {
 
           completionItems.push(completion);
         }
+
+        const excalidrawCompletion = new vscode.CompletionItem(
+          "Excalidraw Image"
+        );
+        excalidrawCompletion.insertText = "";
+        excalidrawCompletion.command = {
+          command: "testPDFExtractor.createExcalidraw",
+        };
+        completionItems.push(excalidrawCompletion);
 
         return completionItems;
       },
