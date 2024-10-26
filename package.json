@@ -55,6 +55,18 @@
         "testPDFExtractor.pdfPath": {
           "type": "string",
           "description": "Path to the PDF, where the completion items should be extracted from."
+        },
+        "testPDFExtractor.debug.generateProcessingOutput": {
+          "title": "Create Processing output",
+          "description": "Write the output of the PDF processing to a JSON file",
+          "type": "boolean",
+          "default": false
+        },
+        "testPDFExtractor.debug.disableCache": {
+          "title": "Disable Cache",
+          "description": "Disable Cache for debugging purposes",
+          "type": "boolean",
+          "default": false
         }
       }
     },

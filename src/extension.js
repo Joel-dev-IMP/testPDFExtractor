@@ -13,8 +13,13 @@ const normalizeWord = (word) => {
 
 const readPDFFile = async (path) => {
   try {
+    const config = vscode.workspace.getConfiguration("testPDFExtractor.debug");
     const data = await fs.readFile(path);
     const pdfData = await pdf(data);
+
+    if (config.get("generateProcessingOutput")) {
+      await fs.writeFile(path + ".rawdata.json", JSON.stringify(pdfData));
+    }
 
     const replacements = [
       ["̈\no", "ö"],
@@ -43,6 +48,13 @@ const readPDFFile = async (path) => {
     replacements.forEach((replacement) => {
       words = words.replaceAll(replacement[0], replacement[1]);
     });
+
+    if (config.get("generateProcessingOutput")) {
+      await fs.writeFile(
+        path + ".modified.json",
+        JSON.stringify({ text: words })
+      );
+    }
 
     words = words.split(" ").filter((v) => {
       return !!v && v.length > 0;
@@ -119,7 +131,8 @@ function activate(context) {
 
         if (
           cache.isExpired() ||
-          config.get("pdfPath") !== cache.get("cachedPath")
+          config.get("pdfPath") !== cache.get("cachedPath") ||
+          config.get("debug.disableCache")
         ) {
           let { words: w, wordCount } = await readPDFFile(
             config.get("pdfPath")
