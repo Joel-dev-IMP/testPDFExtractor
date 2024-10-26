@@ -120,9 +120,10 @@ function activate(context) {
           t.insertText = new vscode.SnippetString("$$1 \\leq $2$$0");
         */
 
-        console.log(document);
-        console.log(vscode.window.activeTextEditor.selection);
-
+        const loadingTimerName =
+          "Loading Document - " +
+          (config.get("debug.disableCache") ? "No cache" : "Cache enabled");
+        console.time(loadingTimerName);
         if (
           cache.isExpired() ||
           config.get("pdfPath") !== cache.get("cachedPath") ||
@@ -136,8 +137,6 @@ function activate(context) {
             return v.length > 1 && v.length > wordCount[normalizeWord(v)];
           });
 
-          console.log(w);
-
           await cache.update({
             words: w,
             wordCount: wordCount,
@@ -147,6 +146,8 @@ function activate(context) {
 
         const completionItems = [];
         const words = cache.get("words");
+
+        console.timeEnd(loadingTimerName);
 
         for (let i = 0; i < words.length; i++) {
           const element = words[i];
