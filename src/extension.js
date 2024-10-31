@@ -125,6 +125,12 @@ function activate(context) {
 
       const fileName = await vscode.window.showInputBox({
         prompt: "Please specify a filename for your Excalidraw file",
+        value: strftime(
+          new Date(),
+          vscode.workspace.getConfiguration(
+            "testPDFExtractor.defaultExcalidrawName"
+          )
+        ),
       });
 
       const imgFolder = workspaceFolder.uri.with({

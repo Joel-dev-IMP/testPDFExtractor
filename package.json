@@ -57,6 +57,12 @@
           "type": "string",
           "description": "Path to the PDF, where the completion items should be extracted from."
         },
+        "testPDFExtractor.defaultExcalidrawName": {
+          "title": "Default Excalidraw File Name",
+          "description": "The default file name for new Excalidraw Files (will be suggested). Supports dates using Python strftime syntax.",
+          "type": "string",
+          "default": "%Y-%m-%d_"
+        },
         "testPDFExtractor.debug.generateProcessingOutput": {
           "title": "Create Processing output",
           "description": "Write the output of the PDF processing to a JSON file",
