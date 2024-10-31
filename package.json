@@ -48,7 +48,8 @@
             "type": "string"
           },
           "default": [
-            "markdown"
+            "markdown",
+            "typst"
           ],
           "description": "Languages, where Test PDF Extractor will be enabled."
         },
@@ -73,6 +74,10 @@
     "languages": [
       {
         "id": "markdown",
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "typst",
         "configuration": "./language-configuration.json"
       }
     ]

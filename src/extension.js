@@ -132,6 +132,16 @@ function activate(context) {
       }).fsPath;
 
       await fs.writeFile(imgFolder, "");
+
+      if (textEditor.document.languageId === "typst") {
+        await textEditor.insertSnippet(
+          new vscode.SnippetString(
+            `#image("./img/${fileName}.excalidraw.png", alt: "\${1:alt}")$0`
+          )
+        );
+        return;
+      }
+
       await textEditor.insertSnippet(
         new vscode.SnippetString(
           `![\${1:alt}](./img/${fileName}.excalidraw.png)$0`
