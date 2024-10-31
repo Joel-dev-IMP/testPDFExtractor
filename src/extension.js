@@ -11,6 +11,36 @@ const normalizeWord = (word) => {
   return word.toLowerCase().replaceAll(/\W/g, "");
 };
 
+const padLeft = (string, targetLength, paddingChar) => {
+  let padStr = "";
+
+  for (let i = 0; i < targetLength - string.length; i++) {
+    padStr += paddingChar;
+  }
+
+  return padStr + string;
+};
+
+const strftime = (date = undefined, format) => {
+  if (!date) date = new Date();
+
+  format = format.replaceAll("%Y", date.getFullYear());
+  format = format.replaceAll("%m", date.getMonth() + 1);
+  format = format.replaceAll("%d", date.getDate());
+  format = format.replaceAll("%H", date.getHours());
+  format = format.replaceAll(
+    "%M",
+    padLeft(date.getMinutes().toString(), 2, "0")
+  );
+  format = format.replaceAll(
+    "%S",
+    padLeft(date.getSeconds().toString(), 2, "0")
+  );
+  format = format.replaceAll("%z", date.getTimezoneOffset());
+
+  return format;
+};
+
 const readPDFFile = async (path) => {
   try {
     const config = vscode.workspace.getConfiguration("testPDFExtractor.debug");
