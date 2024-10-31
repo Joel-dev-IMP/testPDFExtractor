@@ -4,64 +4,31 @@ Early WIP version for a VSCode extension that allows to extract words from lectu
 
 ## Features
 
-TODO
+> Warning: Features are still in development and not yet fully functional. Breaking changes are possible, without prior notice.
+> Use at your own risk.
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+testPDFExtractor (Name will be changed to something more meaningful later) is an extension for suggesting words from PDF files. The goal of this extension is to speed up taking notes in Markdown or Typst documents during lectures.
 
-For example if there is an image subfolder under your extension project workspace:
+Currently, the extension offers the following features:
 
-\!\[feature X\]\(images/feature-x.png\)
+- Suggest words from PDF files
+- Quickly create new Excalidraw diagrams and insert them as images
+- Add enhancements to editing Typst documents like easy bold and italic toggling or automatically removing duplicate blank lines and adding a newline at the end of the file on save.
+- Updating the Markdown and Typst language configurations to allow sourrounding text with code and math blocks
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+## Planned Features
 
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+- Extract whole sentences from lecture slides
+- Extract and suggest Math blocks from lecture slides and from the current document
+- Add enhancements for creating lists in Typst documents
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+- `testPDFExtractor.supportedLanguages`: Languages, where Test PDF Extractor will be enabled.
+- `testPDFExtractor.pdfPath`: Path to the PDF, where the completion items should be extracted from.
+- `testPDFExtractor.defaultExcalidrawName`: The default file name for new Excalidraw Files (will be suggested). Supports dates using Python strftime syntax.
 
-For example:
+Debug options:
 
-This extension contributes the following settings:
-
-- `myExtension.enable`: enable/disable this extension
-- `myExtension.thing`: set to `blah` to do something
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-- Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-- Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-- Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets
-
-### For more information
-
-- [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-- [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+- `testPDFExtractor.debug.generateProcessingOutput`: Write the output of the PDF processing to a JSON file
+- `testPDFExtractor.debug.disableCache`: Disable Cache for debugging purposes
