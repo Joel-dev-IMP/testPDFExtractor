@@ -107,6 +107,23 @@ const readPDFFile = async (path) => {
   }
 };
 
+const toggleEmphasis = async (textEditor, symbol) => {
+  await textEditor.edit((editBuilder) => {
+    textEditor.selections.forEach((selection) => {
+      const sourceText = textEditor.document.getText(selection);
+
+      if (sourceText.startsWith(symbol) || sourceText.endsWith(symbol)) {
+        editBuilder.replace(
+          selection,
+          sourceText.substring(1, sourceText.length - 1)
+        );
+      } else {
+        editBuilder.replace(selection, symbol + sourceText + symbol);
+      }
+    });
+  });
+};
+
 /**
  * @param {vscode.ExtensionContext} context
  */
@@ -129,6 +146,20 @@ function activate(context) {
       );
     });
   });
+
+  const toggleBold = vscode.commands.registerTextEditorCommand(
+    "testPDFExtractor.typst.toggleBold",
+    async (textEditor) => {
+      await toggleEmphasis(textEditor, "*");
+    }
+  );
+
+  const toggleItalic = vscode.commands.registerTextEditorCommand(
+    "testPDFExtractor.typst.toggleItalic",
+    async (textEditor) => {
+      await toggleEmphasis(textEditor, "_");
+    }
+  );
 
   const createExcalidraw = vscode.commands.registerTextEditorCommand(
     "testPDFExtractor.createExcalidraw",
@@ -175,7 +206,7 @@ function activate(context) {
     }
   );
 
-  let autoComplete = vscode.languages.registerCompletionItemProvider(
+  const autoComplete = vscode.languages.registerCompletionItemProvider(
     vscode.workspace
       .getConfiguration("testPDFExtractor")
       .get("supportedLanguages"),
@@ -242,7 +273,12 @@ function activate(context) {
     }
   );
 
-  context.subscriptions.push(autoComplete);
+  context.subscriptions.push(
+    autoComplete,
+    toggleBold,
+    toggleItalic,
+    createExcalidraw
+  );
 }
 
 function deactivate() {}

@@ -37,6 +37,14 @@
       {
         "title": "Create Excalidraw file",
         "command": "testPDFExtractor.createExcalidraw"
+      },
+      {
+        "title": "Toggle bold",
+        "command": "testPDFExtractor.typst.toggleBold"
+      },
+      {
+        "title": "Toggle italic",
+        "command": "testPDFExtractor.typst.toggleItalic"
       }
     ],
     "configuration": {
@@ -85,6 +93,20 @@
       {
         "id": "typst",
         "configuration": "./language-configuration.json"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "testPDFExtractor.typst.toggleBold",
+        "key": "ctrl+b",
+        "mac": "cmd+b",
+        "when": "editorTextFocus && !editorReadonly && editorLangId =~ /^typst$/"
+      },
+      {
+        "command": "testPDFExtractor.typst.toggleItalic",
+        "key": "ctrl+i",
+        "mac": "cmd+i",
+        "when": "editorTextFocus && !editorReadonly && editorLangId =~ /^typst$/"
       }
     ]
   },
