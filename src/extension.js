@@ -14,8 +14,12 @@ const normalizeWord = (word) => {
 const readPDFFile = async (path) => {
   try {
     const config = vscode.workspace.getConfiguration("testPDFExtractor.debug");
+    console.time("fs.readFile");
     const data = await fs.readFile(path);
+    console.timeEnd("fs.readFile");
+    console.time("pdf");
     const pdfData = await pdf(data);
+    console.timeEnd("pdf");
 
     if (config.get("generateProcessingOutput")) {
       await fs.writeFile(path + ".rawdata.json", JSON.stringify(pdfData));
