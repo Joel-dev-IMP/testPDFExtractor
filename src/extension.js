@@ -111,6 +111,25 @@ const readPDFFile = async (path) => {
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
+  /* Remove duplicate blank lines and add newline at the end of the document in Typst files */
+  vscode.workspace.onWillSaveTextDocument(async (e) => {
+    if (vscode.window.activeTextEditor.document !== e.document) return;
+    if (e.document.languageId !== "typst") return;
+
+    await vscode.window.activeTextEditor.edit((editBuilder) => {
+      editBuilder.replace(
+        new vscode.Range(
+          e.document.lineAt(0).range.start,
+          e.document.lineAt(e.document.lineCount - 1).range.end
+        ),
+        e.document
+          .getText()
+          .replaceAll(/(\r?\n)(\r?\n)+/g, "\n\n")
+          .replace(/\r?\n$/, "") + "\n"
+      );
+    });
+  });
+
   const createExcalidraw = vscode.commands.registerTextEditorCommand(
     "testPDFExtractor.createExcalidraw",
     async (textEditor) => {
