@@ -82,6 +82,12 @@
           "description": "Disable Cache for debugging purposes",
           "type": "boolean",
           "default": false
+        },
+        "testPDFExtractor.experimental.enableLineCompletion": {
+          "title": "Enable Line Completion",
+          "description": "Enable the completion of entire lines of text",
+          "type": "boolean",
+          "default": false
         }
       }
     },

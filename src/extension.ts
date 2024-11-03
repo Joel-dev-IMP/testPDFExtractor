@@ -200,13 +200,15 @@ export function activate(context: vscode.ExtensionContext) {
 
         console.timeEnd(loadingTimerName);
 
-        for (let i = 0; i < lines.length; i++) {
-          const element = lines[i];
+        if (config.get("experimental.enableLineCompletion")) {
+          for (let i = 0; i < lines.length; i++) {
+            const element = lines[i];
 
-          const completion = new vscode.CompletionItem(element);
-          completion.kind = vscode.CompletionItemKind.Value;
+            const completion = new vscode.CompletionItem(element);
+            completion.kind = vscode.CompletionItemKind.Value;
 
-          completionItems.push(completion);
+            completionItems.push(completion);
+          }
         }
 
         for (let i = 0; i < words.length; i++) {
