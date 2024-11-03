@@ -18,7 +18,7 @@ Currently, the extension offers the following features:
 
 ## Planned Features
 
-- Extract whole sentences from lecture slides
+- Extract whole sentences from lecture slides (WIP)
 - Extract and suggest Math blocks from lecture slides and from the current document
 - Add enhancements for creating lists in Typst documents
 
@@ -27,6 +27,8 @@ Currently, the extension offers the following features:
 - `testPDFExtractor.supportedLanguages`: Languages, where Test PDF Extractor will be enabled.
 - `testPDFExtractor.pdfPath`: Path to the PDF, where the completion items should be extracted from.
 - `testPDFExtractor.excalidraw.defaultName`: The default file name for new Excalidraw Files (will be suggested). Supports dates using Python strftime syntax.
+- `testPDFExtractor.excalidraw.imageFolder`: The folder, where the Excalidraw images should be saved to.
+- `testPDFExtractor.experimental.enableLineCompletion`: Enable the completion of entire lines of text.
 
 Debug options:
 
