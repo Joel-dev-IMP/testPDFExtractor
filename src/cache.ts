@@ -1,19 +1,23 @@
-class WorkspaceCache {
+import { ExtensionContext, WorkspaceConfiguration } from "vscode";
+
+export class WorkspaceCache {
   context;
   cacheKey;
-  constructor(context, cacheKey) {
+  constructor(context: ExtensionContext, cacheKey: string) {
     this.context = context;
     this.cacheKey = cacheKey;
   }
 
   get(key = "") {
-    const data = this.context.workspaceState.get(this.cacheKey);
+    const data = this.context.workspaceState.get<Record<string, any>>(
+      this.cacheKey
+    );
 
     if (key === "") return data;
     return data?.[key];
   }
 
-  async update(object) {
+  async update(object: object) {
     console.log("Updating cache!");
 
     await this.context.workspaceState.update(this.cacheKey, {
@@ -36,5 +40,3 @@ class WorkspaceCache {
     return Date.now() - date > 1000 * 60 * 60;
   }
 }
-
-module.exports = { WorkspaceCache };

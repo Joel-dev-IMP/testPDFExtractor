@@ -1,17 +1,21 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-const vscode = require("vscode");
-const fs = require("fs/promises");
+import * as vscode from "vscode";
+import * as fs from "fs/promises";
+import * as path from "path";
 const pdf = require("pdf-parse");
 
-const p = require("path");
-const { WorkspaceCache } = require("./cache");
+import { WorkspaceCache } from "./cache";
 
-const normalizeWord = (word) => {
+const normalizeWord = (word: string): string => {
   return word.toLowerCase().replaceAll(/\W/g, "");
 };
 
-const padLeft = (string, targetLength, paddingChar) => {
+const padLeft = (
+  string: string,
+  targetLength: number,
+  paddingChar: string
+): string => {
   let padStr = "";
 
   for (let i = 0; i < targetLength - string.length; i++) {
@@ -21,13 +25,16 @@ const padLeft = (string, targetLength, paddingChar) => {
   return padStr + string;
 };
 
-const strftime = (date = undefined, format) => {
+const strftime = (
+  date: Date | undefined = undefined,
+  format: string
+): string => {
   if (!date) date = new Date();
 
-  format = format.replaceAll("%Y", date.getFullYear());
-  format = format.replaceAll("%m", date.getMonth() + 1);
-  format = format.replaceAll("%d", date.getDate());
-  format = format.replaceAll("%H", date.getHours());
+  format = format.replaceAll("%Y", date.getFullYear().toString());
+  format = format.replaceAll("%m", (date.getMonth() + 1).toString());
+  format = format.replaceAll("%d", date.getDate().toString());
+  format = format.replaceAll("%H", date.getHours().toString());
   format = format.replaceAll(
     "%M",
     padLeft(date.getMinutes().toString(), 2, "0")
@@ -36,12 +43,14 @@ const strftime = (date = undefined, format) => {
     "%S",
     padLeft(date.getSeconds().toString(), 2, "0")
   );
-  format = format.replaceAll("%z", date.getTimezoneOffset());
+  format = format.replaceAll("%z", date.getTimezoneOffset().toString());
 
   return format;
 };
 
-const readPDFFile = async (path) => {
+const readPDFFile = async (
+  path: string
+): Promise<{ words: string[]; wordCount: Record<string, number> }> => {
   try {
     const config = vscode.workspace.getConfiguration("testPDFExtractor.debug");
     console.time("fs.readFile");
@@ -62,7 +71,9 @@ const readPDFFile = async (path) => {
       ["̈\nO", "Ö"],
       ["̈\nU", "Ü"],
       ["̈\nA", "Ä"],
-      [/\n\n+/g, "\n"],
+      [/[„“]/g, '"'],
+      ["’", "'"],
+      [/\n\n+/g, "\n\n"],
       [/  +/g, " "],
       ["\n \n", "\n"],
       ["\n ö", "ö"],
@@ -73,14 +84,14 @@ const readPDFFile = async (path) => {
       ["\n Ä", "Ä"],
       [/([a-zäöüß])([A-ZÄÖÜ])/g, "$1 $2"],
       [/([0-9]+)/g, " $1 "],
-      [/(\W)/g, " $1 "],
-      ["\n", " "],
+      [/([^a-zA-ZäöüßÄÖÜß@/:\n])/g, " $1 "], // Macht Probleme
+      ["\n", " "], // Macht Probleme, wenn es um Sätze geht
     ];
 
-    let words = pdfData.text;
-    const wordCount = {};
+    let words: string = pdfData.text;
+    const wordCount: Record<string, number> = {};
     replacements.forEach((replacement) => {
-      words = words.replaceAll(replacement[0], replacement[1]);
+      words = words.replaceAll(replacement[0], replacement[1].toString());
     });
 
     if (config.get("generateProcessingOutput")) {
@@ -90,24 +101,29 @@ const readPDFFile = async (path) => {
       );
     }
 
-    words = words.split(" ").filter((v) => {
+    let splitWords: string[] = words.split(" ").filter((v) => {
       return !!v && v.length > 0;
     });
 
-    words.forEach((word) => {
+    splitWords.forEach((word) => {
       const normalized = normalizeWord(word);
       if (normalized.length > 0) {
         wordCount[normalized] = (wordCount[normalized] ?? 0) + 1;
       }
     });
 
-    return { words: [...new Set(words)], wordCount: wordCount };
+    return { words: [...new Set(splitWords)], wordCount: wordCount };
   } catch (err) {
     console.log(err);
   }
+
+  return { words: [], wordCount: {} };
 };
 
-const toggleEmphasis = async (textEditor, symbol) => {
+const toggleEmphasis = async (
+  textEditor: vscode.TextEditor,
+  symbol: string
+) => {
   await textEditor.edit((editBuilder) => {
     textEditor.selections.forEach((selection) => {
       const sourceText = textEditor.document.getText(selection);
@@ -124,13 +140,10 @@ const toggleEmphasis = async (textEditor, symbol) => {
   });
 };
 
-/**
- * @param {vscode.ExtensionContext} context
- */
-function activate(context) {
+export function activate(context: vscode.ExtensionContext) {
   /* Remove duplicate blank lines and add newline at the end of the document in Typst files */
   vscode.workspace.onWillSaveTextDocument(async (e) => {
-    if (vscode.window.activeTextEditor.document !== e.document) return;
+    if (vscode.window.activeTextEditor?.document !== e.document) return;
     if (e.document.languageId !== "typst") return;
 
     await vscode.window.activeTextEditor.edit((editBuilder) => {
@@ -167,6 +180,7 @@ function activate(context) {
       const workspaceFolder = vscode.workspace.getWorkspaceFolder(
         textEditor.document.uri
       );
+      const config = vscode.workspace.getConfiguration("testPDFExtractor");
 
       if (!workspaceFolder) {
         vscode.window.showErrorMessage("Current file is not saved to a folder");
@@ -175,12 +189,7 @@ function activate(context) {
 
       const fileName = await vscode.window.showInputBox({
         prompt: "Please specify a filename for your Excalidraw file",
-        value: strftime(
-          new Date(),
-          vscode.workspace.getConfiguration(
-            "testPDFExtractor.defaultExcalidrawName"
-          )
-        ),
+        value: strftime(new Date(), config.get("defaultExcalidrawName") ?? ""),
       });
 
       const imgFolder = workspaceFolder.uri.with({
@@ -209,7 +218,7 @@ function activate(context) {
   const autoComplete = vscode.languages.registerCompletionItemProvider(
     vscode.workspace
       .getConfiguration("testPDFExtractor")
-      .get("supportedLanguages"),
+      .get("supportedLanguages") ?? ["markdown", "typst"],
     {
       provideCompletionItems: async (document, position) => {
         const config = vscode.workspace.getConfiguration("testPDFExtractor");
@@ -230,7 +239,7 @@ function activate(context) {
           config.get("debug.disableCache")
         ) {
           let { words: w, wordCount } = await readPDFFile(
-            config.get("pdfPath")
+            config.get("pdfPath") ?? ""
           );
 
           w = w.filter((v) => {
@@ -264,6 +273,7 @@ function activate(context) {
         );
         excalidrawCompletion.insertText = "";
         excalidrawCompletion.command = {
+          title: "Create Excalidraw Image",
           command: "testPDFExtractor.createExcalidraw",
         };
         completionItems.push(excalidrawCompletion);
@@ -281,9 +291,4 @@ function activate(context) {
   );
 }
 
-function deactivate() {}
-
-module.exports = {
-  activate,
-  deactivate,
-};
+export function deactivate() {}
