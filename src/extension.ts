@@ -32,9 +32,12 @@ const strftime = (
   if (!date) date = new Date();
 
   format = format.replaceAll("%Y", date.getFullYear().toString());
-  format = format.replaceAll("%m", (date.getMonth() + 1).toString());
-  format = format.replaceAll("%d", date.getDate().toString());
-  format = format.replaceAll("%H", date.getHours().toString());
+  format = format.replaceAll(
+    "%m",
+    padLeft((date.getMonth() + 1).toString(), 2, "0")
+  );
+  format = format.replaceAll("%d", padLeft(date.getDate().toString(), 2, "0"));
+  format = format.replaceAll("%H", padLeft(date.getHours().toString(), 2, "0"));
   format = format.replaceAll(
     "%M",
     padLeft(date.getMinutes().toString(), 2, "0")
