@@ -65,11 +65,17 @@
           "type": "string",
           "description": "Path to the PDF, where the completion items should be extracted from."
         },
-        "testPDFExtractor.defaultExcalidrawName": {
-          "title": "Default Excalidraw File Name",
-          "description": "The default file name for new Excalidraw Files (will be suggested). Supports dates using Python strftime syntax.",
+        "testPDFExtractor.excalidraw.defaultName": {
+          "title": "Default File Name",
+          "description": "The default file name for new Excalidraw Files. This filename will be suggested when creating a new Excalidraw image. Supports dates using Python strftime syntax.",
           "type": "string",
           "default": "%Y-%m-%d_"
+        },
+        "testPDFExtractor.excalidraw.imageLocation": {
+          "title": "Image Location",
+          "description": "Specify, where you want to store your Excalidraw Files. Absolute paths and paths relative to the active file are supported. If the path does not exist, it will be created.",
+          "type": "string",
+          "default": "./img/"
         },
         "testPDFExtractor.debug.generateProcessingOutput": {
           "title": "Create Processing output",

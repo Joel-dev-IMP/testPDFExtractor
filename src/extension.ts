@@ -2,7 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import * as fs from "fs/promises";
-// import * as path from "path";
+import * as path from "path";
 
 import { WorkspaceCache } from "./cache";
 import { readPDF, normalizeWord } from "./readPDF";
@@ -122,40 +122,45 @@ export function activate(context: vscode.ExtensionContext) {
   const createExcalidraw = vscode.commands.registerTextEditorCommand(
     "testPDFExtractor.createExcalidraw",
     async (textEditor) => {
-      const workspaceFolder = vscode.workspace.getWorkspaceFolder(
-        textEditor.document.uri
+      const config = vscode.workspace.getConfiguration(
+        "testPDFExtractor.excalidraw"
       );
-      const config = vscode.workspace.getConfiguration("testPDFExtractor");
 
-      if (!workspaceFolder) {
+      if (textEditor.document.isUntitled) {
         vscode.window.showErrorMessage("Current file is not saved to a folder");
         return;
       }
 
       const fileName = await vscode.window.showInputBox({
         prompt: "Please specify a filename for your Excalidraw file",
-        value: strftime(new Date(), config.get("defaultExcalidrawName") ?? ""),
+        value: strftime(new Date(), config.get("defaultName") ?? ""),
       });
 
-      const imgFolder = workspaceFolder.uri.with({
-        path: workspaceFolder.uri.path + `/img/${fileName}.excalidraw.png`,
-      }).fsPath;
+      const currentFileDirectory = path.dirname(textEditor.document.uri.fsPath);
+      const targetFilePath = path.resolve(
+        currentFileDirectory,
+        path.normalize(
+          `${config.get("imageLocation")}/${fileName}.excalidraw.png`
+        )
+      );
 
-      await fs.writeFile(imgFolder, "");
+      await fs.mkdir(path.dirname(targetFilePath), { recursive: true });
+      await fs.writeFile(targetFilePath, "");
+      const insertPath = path
+        .normalize(`${config.get("imageLocation")}/${fileName}.excalidraw.png`)
+        .replaceAll("\\", "/");
 
       if (textEditor.document.languageId === "typst") {
         await textEditor.insertSnippet(
           new vscode.SnippetString(
-            `#image("./img/${fileName}.excalidraw.png", alt: "\${1:alt}")$0`
+            `#image("${insertPath}", alt: "\${1:alt}")$0`
           )
         );
         return;
       }
 
       await textEditor.insertSnippet(
-        new vscode.SnippetString(
-          `![\${1:alt}](./img/${fileName}.excalidraw.png)$0`
-        )
+        new vscode.SnippetString(`![\${1:alt}](${insertPath})$0`)
       );
     }
   );

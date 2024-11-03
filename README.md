@@ -26,7 +26,7 @@ Currently, the extension offers the following features:
 
 - `testPDFExtractor.supportedLanguages`: Languages, where Test PDF Extractor will be enabled.
 - `testPDFExtractor.pdfPath`: Path to the PDF, where the completion items should be extracted from.
-- `testPDFExtractor.defaultExcalidrawName`: The default file name for new Excalidraw Files (will be suggested). Supports dates using Python strftime syntax.
+- `testPDFExtractor.excalidraw.defaultName`: The default file name for new Excalidraw Files (will be suggested). Supports dates using Python strftime syntax.
 
 Debug options:
 
