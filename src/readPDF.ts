@@ -99,8 +99,6 @@ export const readPDF = async (
     words = PreprocessingReplacements.preprocessLatex(words);
     words = PreprocessingReplacements.preprocessNormalization(words);
     words = PreprocessingReplacements.preprocessWhitespace(words);
-    words = PreprocessingReplacements.preprocessWordSplitting(words);
-    words = PreprocessingReplacements.preprocessWhitespace(words);
     words = words.trim();
 
     if (config.get("generateProcessingOutput")) {
@@ -122,9 +120,13 @@ export const readPDF = async (
     const splitWords: string[] = [];
 
     splitLines.forEach((line) => {
-      const words: string[] = line.split(" ").filter((v) => {
-        return !!v && v.length > 0;
-      });
+      const words: string[] = PreprocessingReplacements.preprocessWordSplitting(
+        line
+      )
+        .split(" ")
+        .filter((v) => {
+          return !!v && v.length > 0;
+        });
 
       words.forEach((word) => {
         const normalized = normalizeWord(word);
