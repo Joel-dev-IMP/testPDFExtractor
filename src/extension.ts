@@ -68,16 +68,18 @@ const readPDFFile = async (
     }
 
     const replacements = [
-      ["̈\no", "ö"],
-      ["̈\nu", "ü"],
-      ["̈\na", "ä"],
-      ["̈\nO", "Ö"],
-      ["̈\nU", "Ü"],
-      ["̈\nA", "Ä"],
-      [/[„“]/g, '"'],
-      ["’", "'"],
-      [/\n\n+/g, "\n\n"],
-      [/  +/g, " "],
+      ["̈\no", "ö"], // LaTeX Formatting weirdness
+      ["̈\nu", "ü"], // LaTeX Formatting weirdness
+      ["̈\na", "ä"], // LaTeX Formatting weirdness
+      ["̈\nO", "Ö"], // LaTeX Formatting weirdness
+      ["̈\nU", "Ü"], // LaTeX Formatting weirdness
+      ["̈\nA", "Ä"], // LaTeX Formatting weirdness
+      [/▶\n+/g, "- "], // LaTeX Formatting weirdness
+      [/[„“]/g, '"'], // Normalize Quotes
+      ["’", "'"], // Normalize Apostrophes
+      ["–", "-"], // Normalize Dashes
+      [/\n\n+/g, "\n\n"], // Remove duplicate blank lines
+      [/  +/g, " "], // Remove duplicate whitespace
       ["\n \n", "\n"],
       ["\n ö", "ö"],
       ["\n ü", "ü"],
@@ -87,8 +89,7 @@ const readPDFFile = async (
       ["\n Ä", "Ä"],
       [/([a-zäöüß])([A-ZÄÖÜ])/g, "$1 $2"],
       [/([0-9]+)/g, " $1 "],
-      [/([^a-zA-ZäöüßÄÖÜß@/:\n])/g, " $1 "], // Macht Probleme
-      ["\n", " "], // Macht Probleme, wenn es um Sätze geht
+      // [/([^a-zA-ZäöüßÄÖÜß@/:\n])/g, " $1 "], // Macht Probleme
     ];
 
     let words: string = pdfData.text;
@@ -96,6 +97,7 @@ const readPDFFile = async (
     replacements.forEach((replacement) => {
       words = words.replaceAll(replacement[0], replacement[1].toString());
     });
+    words = words.trim();
 
     if (config.get("generateProcessingOutput")) {
       await fs.writeFile(
@@ -104,15 +106,29 @@ const readPDFFile = async (
       );
     }
 
-    let splitWords: string[] = words.split(" ").filter((v) => {
-      return !!v && v.length > 0;
-    });
+    let splitLines: string[] = words.split("\n");
 
-    splitWords.forEach((word) => {
-      const normalized = normalizeWord(word);
-      if (normalized.length > 0) {
-        wordCount[normalized] = (wordCount[normalized] ?? 0) + 1;
-      }
+    if (config.get("generateProcessingOutput")) {
+      await fs.writeFile(
+        path + ".lines.json",
+        JSON.stringify({ text: splitLines })
+      );
+    }
+
+    let splitWords: string[] = [];
+
+    splitLines.forEach((line) => {
+      let words: string[] = line.split(" ").filter((v) => {
+        return !!v && v.length > 0;
+      });
+
+      words.forEach((word) => {
+        const normalized = normalizeWord(word);
+        splitWords.push(word);
+        if (normalized.length > 0) {
+          wordCount[normalized] = (wordCount[normalized] ?? 0) + 1;
+        }
+      });
     });
 
     return { words: [...new Set(splitWords)], wordCount: wordCount };
