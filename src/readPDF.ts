@@ -22,6 +22,11 @@ class PreprocessingReplacements {
     ["\n Ö", " Ö"],
     ["\n Ü", " Ü"],
     ["\n Ä", " Ä"],
+    ["↵", "ff"],
+    ["", " lt.eq "],
+    ["✓", " subset.eq "],
+    ["⇥", " times "],
+    ["\n⇤", "^*"],
   ];
   static normalization = [
     [/[„“”]/g, '"'],
