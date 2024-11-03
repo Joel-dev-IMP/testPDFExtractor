@@ -55,6 +55,17 @@ const toggleEmphasis = async (
     textEditor.selections.forEach((selection) => {
       const sourceText = textEditor.document.getText(selection);
 
+      if (
+        selection.isEmpty &&
+        selection.start.isEqual(textEditor.selection.active)
+      ) {
+        textEditor.insertSnippet(
+          new vscode.SnippetString(symbol + "$1" + symbol + "$0"),
+          selection.start
+        );
+        return;
+      }
+
       if (sourceText.startsWith(symbol) || sourceText.endsWith(symbol)) {
         editBuilder.replace(
           selection,
