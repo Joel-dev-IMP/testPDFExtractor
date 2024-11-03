@@ -3,13 +3,9 @@
 import * as vscode from "vscode";
 import * as fs from "fs/promises";
 import * as path from "path";
-const pdf = require("pdf-parse");
 
 import { WorkspaceCache } from "./cache";
-
-const normalizeWord = (word: string): string => {
-  return word.toLowerCase().replaceAll(/\W/g, "");
-};
+import { readPDF, normalizeWord } from "./readPDF";
 
 const padLeft = (
   string: string,
@@ -49,94 +45,6 @@ const strftime = (
   format = format.replaceAll("%z", date.getTimezoneOffset().toString());
 
   return format;
-};
-
-const readPDFFile = async (
-  path: string
-): Promise<{ words: string[]; wordCount: Record<string, number> }> => {
-  try {
-    const config = vscode.workspace.getConfiguration("testPDFExtractor.debug");
-    console.time("fs.readFile");
-    const data = await fs.readFile(path);
-    console.timeEnd("fs.readFile");
-    console.time("pdf");
-    const pdfData = await pdf(data);
-    console.timeEnd("pdf");
-
-    if (config.get("generateProcessingOutput")) {
-      await fs.writeFile(path + ".rawdata.json", JSON.stringify(pdfData));
-    }
-
-    const replacements = [
-      ["̈\no", "ö"], // LaTeX Formatting weirdness
-      ["̈\nu", "ü"], // LaTeX Formatting weirdness
-      ["̈\na", "ä"], // LaTeX Formatting weirdness
-      ["̈\nO", "Ö"], // LaTeX Formatting weirdness
-      ["̈\nU", "Ü"], // LaTeX Formatting weirdness
-      ["̈\nA", "Ä"], // LaTeX Formatting weirdness
-      [/▶\n+/g, "- "], // LaTeX Formatting weirdness
-      [/[„“]/g, '"'], // Normalize Quotes
-      ["’", "'"], // Normalize Apostrophes
-      ["–", "-"], // Normalize Dashes
-      [/\n\n+/g, "\n\n"], // Remove duplicate blank lines
-      [/  +/g, " "], // Remove duplicate whitespace
-      ["\n \n", "\n"],
-      ["\n ö", "ö"],
-      ["\n ü", "ü"],
-      ["\n ä", "ä"],
-      ["\n Ö", "Ö"],
-      ["\n Ü", "Ü"],
-      ["\n Ä", "Ä"],
-      [/([a-zäöüß])([A-ZÄÖÜ])/g, "$1 $2"],
-      [/([0-9]+)/g, " $1 "],
-      // [/([^a-zA-ZäöüßÄÖÜß@/:\n])/g, " $1 "], // Macht Probleme
-    ];
-
-    let words: string = pdfData.text;
-    const wordCount: Record<string, number> = {};
-    replacements.forEach((replacement) => {
-      words = words.replaceAll(replacement[0], replacement[1].toString());
-    });
-    words = words.trim();
-
-    if (config.get("generateProcessingOutput")) {
-      await fs.writeFile(
-        path + ".modified.json",
-        JSON.stringify({ text: words })
-      );
-    }
-
-    let splitLines: string[] = words.split("\n");
-
-    if (config.get("generateProcessingOutput")) {
-      await fs.writeFile(
-        path + ".lines.json",
-        JSON.stringify({ text: splitLines })
-      );
-    }
-
-    let splitWords: string[] = [];
-
-    splitLines.forEach((line) => {
-      let words: string[] = line.split(" ").filter((v) => {
-        return !!v && v.length > 0;
-      });
-
-      words.forEach((word) => {
-        const normalized = normalizeWord(word);
-        splitWords.push(word);
-        if (normalized.length > 0) {
-          wordCount[normalized] = (wordCount[normalized] ?? 0) + 1;
-        }
-      });
-    });
-
-    return { words: [...new Set(splitWords)], wordCount: wordCount };
-  } catch (err) {
-    console.log(err);
-  }
-
-  return { words: [], wordCount: {} };
 };
 
 const toggleEmphasis = async (
@@ -257,7 +165,7 @@ export function activate(context: vscode.ExtensionContext) {
           config.get("pdfPath") !== cache.get("cachedPath") ||
           config.get("debug.disableCache")
         ) {
-          let { words: w, wordCount } = await readPDFFile(
+          let { words: w, wordCount } = await readPDF(
             config.get("pdfPath") ?? ""
           );
 
