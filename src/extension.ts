@@ -158,7 +158,7 @@ export function activate(context: vscode.ExtensionContext) {
         e.document
           .getText()
           .replaceAll(/(\r?\n)(\r?\n)+/g, "\n\n")
-          .replace(/\r?\n$/, "") + "\n"
+          .replace(/(\r?\n)+$/, "") + "\n"
       );
     });
   });
