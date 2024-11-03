@@ -75,7 +75,11 @@ class PreprocessingReplacements {
 
 export const readPDF = async (
   path: string
-): Promise<{ words: string[]; wordCount: Record<string, number> }> => {
+): Promise<{
+  words: string[];
+  wordCount: Record<string, number>;
+  lines: string[];
+}> => {
   try {
     const config = vscode.workspace.getConfiguration("testPDFExtractor.debug");
     console.time("fs.readFile");
@@ -131,10 +135,14 @@ export const readPDF = async (
       });
     });
 
-    return { words: [...new Set(splitWords)], wordCount: wordCount };
+    return {
+      words: [...new Set(splitWords)],
+      lines: [...new Set(splitLines)],
+      wordCount: wordCount,
+    };
   } catch (err) {
     console.log(err);
   }
 
-  return { words: [], wordCount: {} };
+  return { words: [], lines: [], wordCount: {} };
 };

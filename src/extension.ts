@@ -165,9 +165,11 @@ export function activate(context: vscode.ExtensionContext) {
           config.get("pdfPath") !== cache.get("cachedPath") ||
           config.get("debug.disableCache")
         ) {
-          let { words: w, wordCount } = await readPDF(
-            config.get("pdfPath") ?? ""
-          );
+          let {
+            words: w,
+            wordCount,
+            lines,
+          } = await readPDF(config.get("pdfPath") ?? "");
 
           w = w.filter((v) => {
             return v.length > 1 && v.length > wordCount[normalizeWord(v)];
@@ -176,20 +178,30 @@ export function activate(context: vscode.ExtensionContext) {
           await cache.update({
             words: w,
             wordCount: wordCount,
+            lines: lines,
             cachedPath: config.get("pdfPath"),
           });
         }
 
         const completionItems = [];
         const words = cache.get("words");
+        const lines = cache.get("lines");
 
         console.timeEnd(loadingTimerName);
+
+        for (let i = 0; i < lines.length; i++) {
+          const element = lines[i];
+
+          const completion = new vscode.CompletionItem(element);
+          completion.kind = vscode.CompletionItemKind.Value;
+
+          completionItems.push(completion);
+        }
 
         for (let i = 0; i < words.length; i++) {
           const element = words[i];
 
           const completion = new vscode.CompletionItem(element);
-          // testCompletion.kind = vscode.CompletionItemKind.Value; // For Sentences
           completion.kind = vscode.CompletionItemKind.Text;
 
           completionItems.push(completion);
