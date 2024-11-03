@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as fs from "fs/promises";
-const pdf = require("pdf-parse");
+import * as pdf from "pdf-parse";
 
 export const normalizeWord = (word: string): string => {
   return word.toLowerCase().replaceAll(/\W/g, "");
@@ -37,7 +37,7 @@ class PreprocessingReplacements {
     [/\n\n+/g, "\n\n"], // Remove duplicate blank lines
     [/\n +\n/g, "\n"], // Remove lines with only spaces
     [/  +/g, " "], // Remove duplicate whitespace
-    [/\"\n+/g, '"'],
+    [/"\n+/g, '"'],
   ];
 
   static wordSplitting = [
@@ -110,7 +110,7 @@ export const readPDF = async (
       );
     }
 
-    let splitLines: string[] = words.split("\n");
+    const splitLines: string[] = words.split("\n");
 
     if (config.get("generateProcessingOutput")) {
       await fs.writeFile(
@@ -119,10 +119,10 @@ export const readPDF = async (
       );
     }
 
-    let splitWords: string[] = [];
+    const splitWords: string[] = [];
 
     splitLines.forEach((line) => {
-      let words: string[] = line.split(" ").filter((v) => {
+      const words: string[] = line.split(" ").filter((v) => {
         return !!v && v.length > 0;
       });
 

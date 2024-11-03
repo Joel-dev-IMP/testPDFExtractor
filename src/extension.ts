@@ -2,7 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import * as fs from "fs/promises";
-import * as path from "path";
+// import * as path from "path";
 
 import { WorkspaceCache } from "./cache";
 import { readPDF, normalizeWord } from "./readPDF";
@@ -25,7 +25,9 @@ const strftime = (
   date: Date | undefined = undefined,
   format: string
 ): string => {
-  if (!date) date = new Date();
+  if (!date) {
+    date = new Date();
+  }
 
   format = format.replaceAll("%Y", date.getFullYear().toString());
   format = format.replaceAll(
@@ -81,8 +83,13 @@ const toggleEmphasis = async (
 export function activate(context: vscode.ExtensionContext) {
   /* Remove duplicate blank lines and add newline at the end of the document in Typst files */
   vscode.workspace.onWillSaveTextDocument(async (e) => {
-    if (vscode.window.activeTextEditor?.document !== e.document) return;
-    if (e.document.languageId !== "typst") return;
+    if (vscode.window.activeTextEditor?.document !== e.document) {
+      return;
+    }
+
+    if (e.document.languageId !== "typst") {
+      return;
+    }
 
     await vscode.window.activeTextEditor.edit((editBuilder) => {
       editBuilder.replace(
@@ -158,9 +165,15 @@ export function activate(context: vscode.ExtensionContext) {
       .getConfiguration("testPDFExtractor")
       .get("supportedLanguages") ?? ["markdown", "typst"],
     {
-      provideCompletionItems: async (document, position) => {
+      provideCompletionItems: async (_document, _position) => {
         const config = vscode.workspace.getConfiguration("testPDFExtractor");
-        const cache = new WorkspaceCache(context, "testPDFExtractor_cache");
+        const cache = new WorkspaceCache<{
+          date: number;
+          cachedPath: string;
+          words: string[];
+          lines: string[];
+          wordCount: Record<string, number>;
+        }>(context, "testPDFExtractor_cache");
 
         /*
           let t = new vscode.CompletionItem("Less or equal"); // Needed for later
@@ -178,7 +191,9 @@ export function activate(context: vscode.ExtensionContext) {
         ) {
           let {
             words: w,
+            // eslint-disable-next-line prefer-const
             wordCount,
+            // eslint-disable-next-line prefer-const
             lines,
           } = await readPDF(config.get("pdfPath") ?? "");
 
@@ -190,20 +205,18 @@ export function activate(context: vscode.ExtensionContext) {
             words: w,
             wordCount: wordCount,
             lines: lines,
-            cachedPath: config.get("pdfPath"),
+            cachedPath: config.get("pdfPath") ?? "",
           });
         }
 
         const completionItems = [];
-        const words = cache.get("words");
-        const lines = cache.get("lines");
+        const words = cache.get("words") ?? [];
+        const lines = cache.get("lines") ?? [];
 
         console.timeEnd(loadingTimerName);
 
         if (config.get("experimental.enableLineCompletion")) {
-          for (let i = 0; i < lines.length; i++) {
-            const element = lines[i];
-
+          for (const element of lines) {
             const completion = new vscode.CompletionItem(element);
             completion.kind = vscode.CompletionItemKind.Value;
 
@@ -211,9 +224,7 @@ export function activate(context: vscode.ExtensionContext) {
           }
         }
 
-        for (let i = 0; i < words.length; i++) {
-          const element = words[i];
-
+        for (const element of words) {
           const completion = new vscode.CompletionItem(element);
           completion.kind = vscode.CompletionItemKind.Text;
 
