@@ -81,6 +81,10 @@ const toggleEmphasis = async (
 };
 
 export function activate(context: vscode.ExtensionContext) {
+  const configuredLanguages: string[] = vscode.workspace
+    .getConfiguration("testPDFExtractor")
+    .get("supportedLanguages") ?? ["markdown", "typst"];
+
   /* Remove duplicate blank lines and add newline at the end of the document in Typst files */
   vscode.workspace.onWillSaveTextDocument(async (e) => {
     if (vscode.window.activeTextEditor?.document !== e.document) {
@@ -166,9 +170,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   const autoComplete = vscode.languages.registerCompletionItemProvider(
-    vscode.workspace
-      .getConfiguration("testPDFExtractor")
-      .get("supportedLanguages") ?? ["markdown", "typst"],
+    configuredLanguages,
     {
       provideCompletionItems: async (_document, _position) => {
         const config = vscode.workspace.getConfiguration("testPDFExtractor");
@@ -216,18 +218,8 @@ export function activate(context: vscode.ExtensionContext) {
 
         const completionItems = [];
         const words = cache.get("words") ?? [];
-        const lines = cache.get("lines") ?? [];
 
         console.timeEnd(loadingTimerName);
-
-        if (config.get("experimental.enableLineCompletion")) {
-          for (const element of lines) {
-            const completion = new vscode.CompletionItem(element);
-            completion.kind = vscode.CompletionItemKind.Value;
-
-            completionItems.push(completion);
-          }
-        }
 
         for (const element of words) {
           const completion = new vscode.CompletionItem(element);
@@ -250,6 +242,60 @@ export function activate(context: vscode.ExtensionContext) {
       },
     }
   );
+
+  const provider: vscode.InlineCompletionItemProvider = {
+    async provideInlineCompletionItems(document, position, _context, _token) {
+      const config = vscode.workspace.getConfiguration(
+        "testPDFExtractor.experimental"
+      );
+      const result: vscode.InlineCompletionList = {
+        items: [],
+      };
+
+      if (!config.get("enableLineCompletion")) {
+        return result;
+      }
+
+      const cache = new WorkspaceCache<{
+        date: number;
+        cachedPath: string;
+        words: string[];
+        lines: string[];
+        wordCount: Record<string, number>;
+      }>(context, "testPDFExtractor_cache");
+
+      const lineContent: string = document.getText(
+        new vscode.Range(position.line, 0, position.line, Infinity)
+      );
+
+      const sentenceStart =
+        lineContent.split(".")[lineContent.split(".").length - 1];
+      console.log(lineContent);
+
+      for (const line of cache.get("lines") ?? []) {
+        if (sentenceStart.replaceAll(" ", "").length === 0) {
+          break;
+        }
+
+        if (
+          line.replaceAll(" ", "").startsWith(sentenceStart.replaceAll(" ", ""))
+        ) {
+          result.items.push({
+            insertText: line.replace(sentenceStart.trimStart(), ""),
+          });
+        }
+      }
+
+      return result;
+    },
+  };
+
+  for (const language of configuredLanguages) {
+    vscode.languages.registerInlineCompletionItemProvider(
+      { pattern: "**", language: language },
+      provider
+    );
+  }
 
   context.subscriptions.push(
     autoComplete,
