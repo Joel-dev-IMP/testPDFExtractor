@@ -120,6 +120,12 @@
         "mac": "cmd+i",
         "when": "editorTextFocus && !editorReadonly && editorLangId =~ /^typst$/"
       }
+    ],
+    "snippets": [
+      {
+        "language": "typst",
+        "path": "./typst-snippets.json"
+      }
     ]
   },
   "scripts": {
