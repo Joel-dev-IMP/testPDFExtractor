@@ -80,6 +80,17 @@ const toggleEmphasis = async (
   });
 };
 
+const determineSubstringIndex = (original: string, target: string): number => {
+  let substringIndex = 0;
+
+  for (const char of original) {
+    if (char == target[substringIndex]) {
+      substringIndex++;
+    }
+  }
+  return substringIndex;
+};
+
 export function activate(context: vscode.ExtensionContext) {
   const configuredLanguages: string[] = vscode.workspace
     .getConfiguration("testPDFExtractor")
@@ -264,24 +275,30 @@ export function activate(context: vscode.ExtensionContext) {
         wordCount: Record<string, number>;
       }>(context, "testPDFExtractor_cache");
 
-      const lineContent: string = document.getText(
+      let lineContent: string = document.getText(
         new vscode.Range(position.line, 0, position.line, Infinity)
       );
 
-      const sentenceStart =
-        lineContent.split(".")[lineContent.split(".").length - 1];
-      console.log(lineContent);
+      lineContent = lineContent.replaceAll(/(\d)\./g, "$1__DOT__");
+      const sentences: string[] = lineContent.split(".");
+      const lastSentence = sentences[sentences.length - 1].replaceAll(
+        "__DOT__",
+        "."
+      );
+      console.log(lastSentence);
 
       for (const line of cache.get("lines") ?? []) {
-        if (sentenceStart.replaceAll(" ", "").length === 0) {
+        if (lastSentence.trim().length === 0) {
           break;
         }
 
         if (
-          line.replaceAll(" ", "").startsWith(sentenceStart.replaceAll(" ", ""))
+          line.replaceAll(" ", "").startsWith(lastSentence.replaceAll(" ", ""))
         ) {
           result.items.push({
-            insertText: line.replace(sentenceStart.trimStart(), ""),
+            insertText: line.substring(
+              determineSubstringIndex(lastSentence, line)
+            ),
           });
         }
       }
