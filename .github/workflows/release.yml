@@ -21,11 +21,24 @@ jobs:
         id: short_sha
         run: echo "short_sha=$(echo ${{github.sha}} | cut -c -7)" >> "$GITHUB_OUTPUT"
 
-      - name: "Publish release"
-        uses: ncipollo/release-action@v1
+      - name: Release
+        id: release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: Alpha version ${{steps.short_sha.outputs.short_sha}}
-          artifacts: ${{ steps.package.outputs.packagePath }}
-          tag: ${{steps.short_sha.outputs.short_sha}}
-          body: Alpha release of commit ${{steps.short_sha.outputs.short_sha}}
+          tag_name: alpha-${{steps.short_sha.outputs.short_sha}}
+          release_name: Alpha version ${{steps.short_sha.outputs.short_sha}}
+          draft: false
           prerelease: true
+          body: Alpha release of commit ${{steps.short_sha.outputs.short_sha}}
+
+      - name: Upload VSIX
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          asset_path: ${{ steps.package.outputs.packagePath }}
+          asset_name: test-pdf-extractor-alpha-${{steps.short_sha.outputs.short_sha}}.vsix
+          asset_content_type: application/zip
