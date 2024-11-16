@@ -7,6 +7,14 @@ import * as path from "path";
 import { WorkspaceCache } from "./cache";
 import { readPDF, normalizeWord } from "./readPDF";
 
+interface PDFExtractorCache {
+  date: number;
+  cachedPath: string;
+  words: string[];
+  lines: string[];
+  wordCount: Record<string, number>;
+}
+
 const padLeft = (
   string: string,
   targetLength: number,
@@ -193,13 +201,10 @@ export function activate(context: vscode.ExtensionContext) {
     {
       provideCompletionItems: async (_document, _position) => {
         const config = vscode.workspace.getConfiguration("testPDFExtractor");
-        const cache = new WorkspaceCache<{
-          date: number;
-          cachedPath: string;
-          words: string[];
-          lines: string[];
-          wordCount: Record<string, number>;
-        }>(context, "testPDFExtractor_cache");
+        const cache = new WorkspaceCache<PDFExtractorCache>(
+          context,
+          "testPDFExtractor_cache"
+        );
 
         /*
           let t = new vscode.CompletionItem("Less or equal"); // Needed for later
@@ -275,14 +280,6 @@ export function activate(context: vscode.ExtensionContext) {
         return result;
       }
 
-      const cache = new WorkspaceCache<{
-        date: number;
-        cachedPath: string;
-        words: string[];
-        lines: string[];
-        wordCount: Record<string, number>;
-      }>(context, "testPDFExtractor_cache");
-
       let lineContent: string = document.getText(
         new vscode.Range(position.line, 0, position.line, Infinity)
       );
@@ -300,6 +297,11 @@ export function activate(context: vscode.ExtensionContext) {
       if (lastSentence.trim().length < 2) {
         return result;
       }
+
+      const cache = new WorkspaceCache<PDFExtractorCache>(
+        context,
+        "testPDFExtractor_cache"
+      );
 
       for (const line of cache.get("lines") ?? []) {
         if (
