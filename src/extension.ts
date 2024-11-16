@@ -80,13 +80,21 @@ const toggleEmphasis = async (
   });
 };
 
+/**
+ * Given an original string, find the first index in a target string, such that
+ * all characters of the original string have appeared in order.
+ * @param original The original string
+ * @param target The target string
+ */
 const determineSubstringIndex = (original: string, target: string): number => {
   let substringIndex = 0;
 
-  for (const char of original) {
-    if (char == target[substringIndex]) {
-      substringIndex++;
+  let i = 0;
+  while (i < original.length && substringIndex < target.length) {
+    if (original[i] == target[substringIndex]) {
+      i++;
     }
+    substringIndex++;
   }
   return substringIndex;
 };
@@ -286,19 +294,24 @@ export function activate(context: vscode.ExtensionContext) {
         "."
       );
       console.log(lastSentence);
+      // TODO: Better detection
+
+      // Avoid triggering autocompletion too fast
+      if (lastSentence.trim().length < 2) {
+        return result;
+      }
 
       for (const line of cache.get("lines") ?? []) {
-        if (lastSentence.trim().length === 0) {
-          break;
-        }
-
         if (
-          line.replaceAll(" ", "").startsWith(lastSentence.replaceAll(" ", ""))
+          line
+            .replaceAll(" ", "")
+            .replace(/^-/, "")
+            .startsWith(lastSentence.replaceAll(" ", ""))
         ) {
           result.items.push({
-            insertText: line.substring(
-              determineSubstringIndex(lastSentence, line)
-            ),
+            insertText: line
+              .substring(determineSubstringIndex(lastSentence.trimEnd(), line))
+              .trimStart(),
           });
         }
       }
