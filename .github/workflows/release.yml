@@ -1,0 +1,46 @@
+name: Publish Alpha release
+
+on:
+  - push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Package VS Code extension
+        id: package
+        uses: nhedger/package-vscode-extension@v1
+
+      - name: Get short SHA
+        id: short_sha
+        run: echo "short_sha=$(echo ${{github.sha}} | cut -c -7)" >> "$GITHUB_OUTPUT"
+
+      - name: Create Draft Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{steps.short_sha.outputs.short_sha}}
+          release_name: Alpha version ${{steps.short_sha.outputs.short_sha}}
+          body: Alpha release of commit ${{steps.short_sha.outputs.short_sha}}
+          draft: true
+          prerelease: true
+
+      - uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.package.outputs.packagePath }}
+          asset_name: test-pdf-extractor-alpha-${{steps.short_sha.outputs.short_sha}}.vsix
+          asset_content_type: application/zip
+
+      - uses: eregon/publish-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.create_release.outputs.id }}
