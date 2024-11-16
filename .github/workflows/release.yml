@@ -22,23 +22,13 @@ jobs:
         run: echo "short_sha=$(echo ${{github.sha}} | cut -c -7)" >> "$GITHUB_OUTPUT"
 
       - name: Release
-        id: release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: svenstaro/upload-release-action@v2
         with:
-          tag_name: alpha-${{steps.short_sha.outputs.short_sha}}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ steps.package.outputs.packagePath }}
+          asset_name: test-pdf-extractor-alpha-${{steps.short_sha.outputs.short_sha}}.vsix
           release_name: Alpha version ${{steps.short_sha.outputs.short_sha}}
-          draft: false
+          tag: alpha-${{steps.short_sha.outputs.short_sha}}
+          overwrite: true
           prerelease: true
           body: Alpha release of commit ${{steps.short_sha.outputs.short_sha}}
-
-      - name: Upload VSIX
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: ${{ steps.package.outputs.packagePath }}
-          asset_name: test-pdf-extractor-alpha-${{steps.short_sha.outputs.short_sha}}.vsix
-          asset_content_type: application/zip
