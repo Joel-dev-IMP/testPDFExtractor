@@ -15,20 +15,6 @@ interface PDFExtractorCache {
   wordCount: Record<string, number>;
 }
 
-const padLeft = (
-  string: string,
-  targetLength: number,
-  paddingChar: string
-): string => {
-  let padStr = "";
-
-  for (let i = 0; i < targetLength - string.length; i++) {
-    padStr += paddingChar;
-  }
-
-  return padStr + string;
-};
-
 const strftime = (
   date: Date | undefined = undefined,
   format: string
@@ -40,17 +26,17 @@ const strftime = (
   format = format.replaceAll("%Y", date.getFullYear().toString());
   format = format.replaceAll(
     "%m",
-    padLeft((date.getMonth() + 1).toString(), 2, "0")
+    (date.getMonth() + 1).toString().padStart(2, "0")
   );
-  format = format.replaceAll("%d", padLeft(date.getDate().toString(), 2, "0"));
-  format = format.replaceAll("%H", padLeft(date.getHours().toString(), 2, "0"));
+  format = format.replaceAll("%d", date.getDate().toString().padStart(2, "0"));
+  format = format.replaceAll("%H", date.getHours().toString().padStart(2, "0"));
   format = format.replaceAll(
     "%M",
-    padLeft(date.getMinutes().toString(), 2, "0")
+    date.getMinutes().toString().padStart(2, "0")
   );
   format = format.replaceAll(
     "%S",
-    padLeft(date.getSeconds().toString(), 2, "0")
+    date.getSeconds().toString().padStart(2, "0")
   );
   format = format.replaceAll("%z", date.getTimezoneOffset().toString());
 
