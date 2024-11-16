@@ -306,7 +306,7 @@ export function activate(context: vscode.ExtensionContext) {
           line
             .replaceAll(" ", "")
             .replace(/^-/, "")
-            .startsWith(lastSentence.replaceAll(" ", ""))
+            .startsWith(lastSentence.replace(/^-/, "").replaceAll(" ", ""))
         ) {
           result.items.push({
             insertText: line
