@@ -153,6 +153,13 @@ export function activate(context: vscode.ExtensionContext) {
         value: strftime(new Date(), config.get("defaultName") ?? ""),
       });
 
+      if (!fileName) {
+        vscode.window.showInformationMessage(
+          "Aborted Excalidraw image creation"
+        );
+        return;
+      }
+
       const currentFileDirectory = path.dirname(textEditor.document.uri.fsPath);
       const targetFilePath = path.resolve(
         currentFileDirectory,
