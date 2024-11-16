@@ -10,6 +10,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Install npm dependencies
+        run: npm install
+
       - name: Package VS Code extension
         id: package
         uses: nhedger/package-vscode-extension@v1
