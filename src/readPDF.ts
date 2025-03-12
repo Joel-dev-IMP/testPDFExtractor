@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
+
 import * as fs from "fs/promises";
+
 import * as pdf from "pdf-parse";
 
 export const normalizeWord = (word: string): string => {
@@ -66,7 +68,7 @@ class PreprocessingReplacements {
 
   private static preprocessingHelper(
     text: string,
-    replacements: (string | RegExp)[][]
+    replacements: (string | RegExp)[][],
   ): string {
     replacements.forEach((replacement) => {
       text = text.replaceAll(replacement[0], replacement[1].toString());
@@ -76,7 +78,7 @@ class PreprocessingReplacements {
 }
 
 export const readPDF = async (
-  path: string
+  path: string,
 ): Promise<{
   words: string[];
   wordCount: Record<string, number>;
@@ -106,7 +108,7 @@ export const readPDF = async (
     if (config.get("generateProcessingOutput")) {
       await fs.writeFile(
         path + ".modified.json",
-        JSON.stringify({ text: words })
+        JSON.stringify({ text: words }),
       );
     }
 
@@ -115,7 +117,7 @@ export const readPDF = async (
     if (config.get("generateProcessingOutput")) {
       await fs.writeFile(
         path + ".lines.json",
-        JSON.stringify({ text: splitLines })
+        JSON.stringify({ text: splitLines }),
       );
     }
 
@@ -123,7 +125,7 @@ export const readPDF = async (
 
     splitLines.forEach((line) => {
       const words: string[] = PreprocessingReplacements.preprocessWordSplitting(
-        line
+        line,
       )
         .split(" ")
         .filter((v) => {
