@@ -283,11 +283,22 @@ export function activate(context: vscode.ExtensionContext) {
         "__DOT__",
         "."
       );
-      console.log(lastSentence);
+      const lastFewWords = lineContent.match(/((?:\S+? ){3})$/g)?.[0] ?? "";
+
+      let compareString = lastSentence;
+
+      if (
+        lastFewWords.length !== 0 &&
+        lastFewWords.length < compareString.length
+      ) {
+        compareString = lastFewWords;
+      }
+
+      console.log(compareString);
       // TODO: Better detection
 
       // Avoid triggering autocompletion too fast
-      if (lastSentence.trim().length < 2) {
+      if (compareString.trim().length < 2) {
         return result;
       }
 
@@ -297,15 +308,26 @@ export function activate(context: vscode.ExtensionContext) {
       );
 
       for (const line of cache.get("lines") ?? []) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const _t = line
+          .replaceAll(" ", "")
+          .toLowerCase()
+          .indexOf(compareString.replaceAll(" ", "").toLowerCase());
+
         if (
           line
             .replaceAll(" ", "")
-            .replace(/^-/, "")
-            .startsWith(lastSentence.replace(/^-/, "").replaceAll(" ", ""))
+            .toLowerCase()
+            .indexOf(compareString.replaceAll(" ", "").toLowerCase()) >= 0
         ) {
           result.items.push({
             insertText: line
-              .substring(determineSubstringIndex(lastSentence.trimEnd(), line))
+              .substring(
+                determineSubstringIndex(
+                  compareString.trimEnd().toLowerCase(),
+                  line.toLowerCase()
+                )
+              )
               .trimStart(),
           });
         }
