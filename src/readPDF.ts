@@ -50,30 +50,86 @@ class PreprocessingReplacements {
     [/([^a-zA-ZäöüßÄÖÜß@/:\n0-9])/g, " $1 "], // Macht Probleme, verbessern!
   ];
 
-  static preprocessLatex(text: string): string {
-    return this.preprocessingHelper(text, this.latexFormatting);
-  }
-
-  static preprocessNormalization(text: string): string {
-    return this.preprocessingHelper(text, this.normalization);
-  }
-
-  static preprocessWhitespace(text: string): string {
-    return this.preprocessingHelper(text, this.whitespace);
-  }
-
   static preprocessWordSplitting(text: string): string {
-    return this.preprocessingHelper(text, this.wordSplitting);
-  }
-
-  private static preprocessingHelper(
-    text: string,
-    replacements: (string | RegExp)[][],
-  ): string {
-    replacements.forEach((replacement) => {
+    this.wordSplitting.forEach((replacement) => {
       text = text.replaceAll(replacement[0], replacement[1].toString());
     });
     return text;
+  }
+}
+
+export class TextProcessor {
+  private text: string;
+  private lines: string[];
+  private words: string[];
+  private wordCount: Record<string, number>;
+
+  constructor(text: string) {
+    this.text = text;
+    this.preprocessingHelper(PreprocessingReplacements.latexFormatting);
+    this.preprocessingHelper(PreprocessingReplacements.normalization);
+    this.preprocessingHelper(PreprocessingReplacements.whitespace);
+    this.text = this.text.trim();
+
+    this.lines = this.text.split("\n");
+
+    this.words = [];
+    this.wordCount = {};
+
+    this.lines.forEach((line) => {
+      const words: string[] = PreprocessingReplacements.preprocessWordSplitting(
+        line,
+      )
+        .split(" ")
+        .filter((v) => {
+          return !!v && v.length > 0;
+        });
+
+      words.forEach((word) => {
+        const normalized = normalizeWord(word);
+        this.words.push(word);
+        if (normalized.length > 0) {
+          this.wordCount[normalized] = (this.wordCount[normalized] ?? 0) + 1;
+        }
+      });
+    });
+  }
+
+  public getText(): string {
+    return this.text;
+  }
+
+  public getLines(): string[] {
+    return this.lines;
+  }
+
+  public getWords(): string[] {
+    return this.words;
+  }
+
+  public getWordCount(): Record<string, number> {
+    return this.wordCount;
+  }
+
+  public getProcessedData(): {
+    words: string[];
+    wordCount: Record<string, number>;
+    lines: string[];
+  } {
+    return {
+      words: [...new Set(this.words)],
+      lines: [...new Set(this.lines)],
+      wordCount: this.wordCount,
+    };
+  }
+
+  private preprocessingHelper(replacements: (string | RegExp)[][]) {
+    replacements.forEach((replacement) => {
+      this.text = this.text.replaceAll(
+        replacement[0],
+        replacement[1].toString(),
+      );
+    });
   }
 }
 
@@ -93,59 +149,23 @@ export const readPDF = async (
     const pdfData = await pdf(data);
     console.timeEnd("pdf");
 
+    const processor: TextProcessor = new TextProcessor(pdfData.text);
+
     if (config.get("generateProcessingOutput")) {
       await fs.writeFile(path + ".rawdata.json", JSON.stringify(pdfData));
-    }
 
-    let words: string = pdfData.text;
-    const wordCount: Record<string, number> = {};
-
-    words = PreprocessingReplacements.preprocessLatex(words);
-    words = PreprocessingReplacements.preprocessNormalization(words);
-    words = PreprocessingReplacements.preprocessWhitespace(words);
-    words = words.trim();
-
-    if (config.get("generateProcessingOutput")) {
       await fs.writeFile(
         path + ".modified.json",
-        JSON.stringify({ text: words }),
+        JSON.stringify({ text: processor.getText() }),
       );
-    }
 
-    const splitLines: string[] = words.split("\n");
-
-    if (config.get("generateProcessingOutput")) {
       await fs.writeFile(
         path + ".lines.json",
-        JSON.stringify({ text: splitLines }),
+        JSON.stringify({ text: processor.getLines() }),
       );
     }
 
-    const splitWords: string[] = [];
-
-    splitLines.forEach((line) => {
-      const words: string[] = PreprocessingReplacements.preprocessWordSplitting(
-        line,
-      )
-        .split(" ")
-        .filter((v) => {
-          return !!v && v.length > 0;
-        });
-
-      words.forEach((word) => {
-        const normalized = normalizeWord(word);
-        splitWords.push(word);
-        if (normalized.length > 0) {
-          wordCount[normalized] = (wordCount[normalized] ?? 0) + 1;
-        }
-      });
-    });
-
-    return {
-      words: [...new Set(splitWords)],
-      lines: [...new Set(splitLines)],
-      wordCount: wordCount,
-    };
+    return processor.getProcessedData();
   } catch (err) {
     console.log(err);
   }
