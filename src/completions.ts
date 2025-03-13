@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import { WorkspaceCache } from "./cache";
-import { normalizeWord, readPDF } from "./readPDF";
+import { normalizeWord, readPDF, TextProcessor } from "./readPDF";
 
 interface PDFExtractorCache {
   date: number;
@@ -38,7 +38,7 @@ export function activate(context: vscode.ExtensionContext) {
   const autoComplete = vscode.languages.registerCompletionItemProvider(
     configuredLanguages,
     {
-      provideCompletionItems: async (_document, _position) => {
+      provideCompletionItems: async (document, _position) => {
         const config = vscode.workspace.getConfiguration("testPDFExtractor");
         const cache = new WorkspaceCache<PDFExtractorCache>(
           context,
@@ -79,8 +79,18 @@ export function activate(context: vscode.ExtensionContext) {
           });
         }
 
+        const processor: TextProcessor = new TextProcessor(document.getText());
+        let words = cache.get("words") ?? [];
+        words = [
+          ...new Set([
+            ...words,
+            ...processor.getWords().filter((word) => {
+              return word.length > 2;
+            }),
+          ]),
+        ];
+
         const completionItems = [];
-        const words = cache.get("words") ?? [];
 
         console.timeEnd(loadingTimerName);
 
