@@ -31,6 +31,52 @@ const strftime = (
   return format;
 };
 
+const createImage = async (
+  textEditor: vscode.TextEditor,
+  config: vscode.WorkspaceConfiguration,
+  fileExtension: String,
+) => {
+  if (textEditor.document.isUntitled) {
+    vscode.window.showErrorMessage("Current file is not saved to a folder");
+    return;
+  }
+
+  const fileName = await vscode.window.showInputBox({
+    prompt: "Please specify a filename",
+    value: strftime(new Date(), config.get("defaultName") ?? ""),
+  });
+
+  if (!fileName) {
+    vscode.window.showInformationMessage("Aborted image creation");
+    return;
+  }
+
+  const currentFileDirectory = path.dirname(textEditor.document.uri.fsPath);
+  const targetFilePath = path.resolve(
+    currentFileDirectory,
+    path.normalize(
+      `${config.get("imageLocation")}/${fileName}.${fileExtension}`,
+    ),
+  );
+
+  await fs.mkdir(path.dirname(targetFilePath), { recursive: true });
+  await fs.writeFile(targetFilePath, "");
+  const insertPath = path
+    .normalize(`${config.get("imageLocation")}/${fileName}.${fileExtension}`)
+    .replaceAll("\\", "/");
+
+  if (textEditor.document.languageId === "typst") {
+    await textEditor.insertSnippet(
+      new vscode.SnippetString(`#image("${insertPath}", alt: "\${1:alt}")$0`),
+    );
+    return;
+  }
+
+  await textEditor.insertSnippet(
+    new vscode.SnippetString(`![\${1:alt}](${insertPath})$0`),
+  );
+};
+
 export function activate(context: vscode.ExtensionContext) {
   const createExcalidraw = vscode.commands.registerTextEditorCommand(
     "testPDFExtractor.createExcalidraw",
@@ -39,51 +85,21 @@ export function activate(context: vscode.ExtensionContext) {
         "testPDFExtractor.excalidraw",
       );
 
-      if (textEditor.document.isUntitled) {
-        vscode.window.showErrorMessage("Current file is not saved to a folder");
-        return;
-      }
+      await createImage(textEditor, config, "excalidraw.png");
+    },
+  );
 
-      const fileName = await vscode.window.showInputBox({
-        prompt: "Please specify a filename for your Excalidraw file",
-        value: strftime(new Date(), config.get("defaultName") ?? ""),
-      });
-
-      if (!fileName) {
-        vscode.window.showInformationMessage(
-          "Aborted Excalidraw image creation",
-        );
-        return;
-      }
-
-      const currentFileDirectory = path.dirname(textEditor.document.uri.fsPath);
-      const targetFilePath = path.resolve(
-        currentFileDirectory,
-        path.normalize(
-          `${config.get("imageLocation")}/${fileName}.excalidraw.png`,
-        ),
+  const createDrawIO = vscode.commands.registerTextEditorCommand(
+    "testPDFExtractor.createDrawIO",
+    async (textEditor) => {
+      const config = vscode.workspace.getConfiguration(
+        "testPDFExtractor.drawio",
       );
 
-      await fs.mkdir(path.dirname(targetFilePath), { recursive: true });
-      await fs.writeFile(targetFilePath, "");
-      const insertPath = path
-        .normalize(`${config.get("imageLocation")}/${fileName}.excalidraw.png`)
-        .replaceAll("\\", "/");
-
-      if (textEditor.document.languageId === "typst") {
-        await textEditor.insertSnippet(
-          new vscode.SnippetString(
-            `#image("${insertPath}", alt: "\${1:alt}")$0`,
-          ),
-        );
-        return;
-      }
-
-      await textEditor.insertSnippet(
-        new vscode.SnippetString(`![\${1:alt}](${insertPath})$0`),
-      );
+      await createImage(textEditor, config, "drawio.png");
     },
   );
 
   context.subscriptions.push(createExcalidraw);
+  context.subscriptions.push(createDrawIO);
 }

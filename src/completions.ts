@@ -111,6 +111,14 @@ export function activate(context: vscode.ExtensionContext) {
         };
         completionItems.push(excalidrawCompletion);
 
+        const drawioCompletion = new vscode.CompletionItem("Draw IO Image");
+        drawioCompletion.insertText = "";
+        drawioCompletion.command = {
+          title: "Create Draw IO Image",
+          command: "testPDFExtractor.createDrawIO",
+        };
+        completionItems.push(drawioCompletion);
+
         return completionItems;
       },
     },

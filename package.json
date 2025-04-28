@@ -39,6 +39,10 @@
         "command": "testPDFExtractor.createExcalidraw"
       },
       {
+        "title": "Create Draw IO file",
+        "command": "testPDFExtractor.createDrawIO"
+      },
+      {
         "title": "Toggle bold",
         "command": "testPDFExtractor.typst.toggleBold"
       },
@@ -74,6 +78,18 @@
         "testPDFExtractor.excalidraw.imageLocation": {
           "title": "Image Location",
           "description": "Specify, where you want to store your Excalidraw Files. Absolute paths and paths relative to the active file are supported. If the path does not exist, it will be created.",
+          "type": "string",
+          "default": "./img/"
+        },
+        "testPDFExtractor.drawio.defaultName": {
+          "title": "Default File Name",
+          "description": "The default file name for new Draw IO Files. This filename will be suggested when creating a new Draw IO image. Supports dates using Python strftime syntax.",
+          "type": "string",
+          "default": "%Y-%m-%d_"
+        },
+        "testPDFExtractor.drawio.imageLocation": {
+          "title": "Image Location",
+          "description": "Specify, where you want to store your Draw IO Files. Absolute paths and paths relative to the active file are supported. If the path does not exist, it will be created.",
           "type": "string",
           "default": "./img/"
         },
