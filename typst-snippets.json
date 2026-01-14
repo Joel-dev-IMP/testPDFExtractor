@@ -2,7 +2,7 @@
   "Insert fenced code block": {
     "prefix": "fenced codeblock",
     "body": [
-      "```${1|python,c,c++,c=,ruby,go,java,php,htm,css,javascript,json,markdown,console|}",
+      "```${1|python,c,c++,c=,ruby,go,java,php,html,css,javascript,json,markdown,console,sql,sh|}",
       "${TM_SELECTED_TEXT}$0",
       "```"
     ],
